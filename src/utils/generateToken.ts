@@ -1,7 +1,10 @@
 import { Response } from "express";
 import jwt from "jsonwebtoken";
 
-export const generateTokenSetCookie = (userId: string, res: Response): string => {
+export const generateTokenSetCookie = (
+  userId: string,
+  res: Response
+): string => {
   // Generate JWT token
   const token = jwt.sign({ userId }, process.env.JWT_SECRET || "", {
     expiresIn: "30d",

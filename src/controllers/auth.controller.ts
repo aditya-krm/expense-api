@@ -8,15 +8,27 @@ import { generateTokenSetCookie } from "../utils/generateToken";
 const prisma = new PrismaClient();
 
 // Validation schemas
-const signupSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email format"),
-  phone: z.string().regex(/^\+?[1-9]\d{9,14}$/, "Invalid phone number"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  profession: z
-    .enum(["salary", "business", "student", "freelancer", "other"])
-    .optional(),
-});
+const signupSchema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email format"),
+    phone: z.string().regex(/^\+?[1-9]\d{9,14}$/, "Invalid phone number"),
+    password: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      ),
+    confirmPassword: z.string().min(6, "Confirm password is required"),
+    profession: z
+      .enum(["salary", "business", "student", "freelancer", "other"])
+      .optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"], // path of error
+  });
 
 const loginSchema = z.object({
   key: z.string().refine(
@@ -32,6 +44,7 @@ const loginSchema = z.object({
 });
 
 export const signup = async (req: Request, res: Response) => {
+  console.log(req.body);
   try {
     // Validate request body
     const validatedData = signupSchema.parse(req.body);
@@ -53,10 +66,13 @@ export const signup = async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
+    // Remove confirmPassword before saving to database
+    const { confirmPassword, ...userData } = validatedData;
+
     // Create user
     const user = await prisma.user.create({
       data: {
-        ...validatedData,
+        ...userData,
         password: hashedPassword,
       },
     });
@@ -83,6 +99,7 @@ export const signup = async (req: Request, res: Response) => {
       });
     }
 
+    console.error("Signup error:", error);
     res.status(500).json({
       success: false,
       message: "Something went wrong",

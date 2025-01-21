@@ -4,6 +4,12 @@ CREATE TYPE "Profession" AS ENUM ('salary', 'business', 'student', 'freelancer',
 -- CreateEnum
 CREATE TYPE "TransactionType" AS ENUM ('INCOME', 'EXPENSE', 'CREDIT_GIVEN', 'CREDIT_RECEIVED');
 
+-- CreateEnum
+CREATE TYPE "PaymentMode" AS ENUM ('ONLINE', 'CASH');
+
+-- CreateEnum
+CREATE TYPE "RecurrenceType" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -21,33 +27,20 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Transaction" (
     "id" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "amount" DECIMAL(65,30) NOT NULL,
     "type" "TransactionType" NOT NULL,
+    "category" TEXT NOT NULL,
+    "amount" DECIMAL(65,30) NOT NULL,
     "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "recurrence" TEXT,
-    "categoryId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT NOT NULL,
+    "paymentMode" "PaymentMode" NOT NULL,
+    "recurrence" "RecurrenceType",
     "relatedTo" TEXT,
-    "dueDate" TIMESTAMP(3),
     "isPaid" BOOLEAN,
+    "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Category" (
-    "id" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "icon" TEXT,
-    "type" "TransactionType" NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -55,12 +48,6 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_phone_key" ON "User"("phone");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Category_title_type_key" ON "Category"("title", "type");
-
--- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
